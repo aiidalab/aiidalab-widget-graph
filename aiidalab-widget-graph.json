@@ -1,0 +1,5 @@
+{
+  "load_extensions": {
+    "aiidalab-widget-graph/extension": true
+  }
+}
