@@ -17,7 +17,8 @@ var GraphModel = widgets.DOMWidgetModel.extend({
 // Custom View. Renders the widget model.
 var GraphView = widgets.DOMWidgetView.extend({
     defaults: {
-        fillColor: "#cccccc"
+        fillColor: "#cccccc",
+        radius: 5
     },
 
     nodeProxy: function() {
@@ -90,7 +91,7 @@ var GraphView = widgets.DOMWidgetView.extend({
         this.d3Node.exit().remove();
         this.d3Node = this.d3Node
             .enter().append("circle").merge(this.d3Node)
-            .attr("r", 5)
+            .attr("r", function(d) { return (d.meta.radius || _this.defaults.radius); })
             .attr("fill", function(d) { return (d.meta.fillColor || _this.defaults.fillColor); })
             .call(d3.drag()
             .on("start", function(d,i) { _this.dragstarted(d,i,this); })
@@ -159,6 +160,7 @@ var GraphView = widgets.DOMWidgetView.extend({
 });
 
 // TODO:
+// - check why the title does not work
 // - Make sure that when nodes are removed, also the corresponding links are removed
 //   (and they should be removed first!!) Otherwise it crashes in JS (make a guard in JS to avoid problems)
 // - make the_width, the_height as parameters from python
