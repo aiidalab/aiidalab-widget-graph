@@ -14,15 +14,18 @@ var GraphModel = widgets.DOMWidgetModel.extend({
     }),
 });
 
-
 // Custom View. Renders the widget model.
 var GraphView = widgets.DOMWidgetView.extend({
+    defaults: {
+        fillColor: "#cccccc"
+    },
+
     nodeProxy: function() {
         var nodes = this.model.get('_graph')['nodes'] || {};
 
         nodes = _.chain(nodes)
             .toPairs().sortBy(0) // convert to [[k, v], [k, v], ...]
-            .map(function(pair) {return {"id": +pair[0], "meta": pair[1]}})
+            .map(function(pair) {return {"id": pair[0], "meta": pair[1]}})
             .value();
         
         return nodes;
@@ -71,39 +74,37 @@ var GraphView = widgets.DOMWidgetView.extend({
     updateGraph: function(nodeData, linkData) {
         var _this = this;
 
-        var colorFunction = function(groupId) {
-            return d3.scaleOrdinal()
-            .domain(_.range(100)) // TODO: Put here the max number of groups you have
-            .range(d3.schemeCategory10)(groupId);
-        };
-
         // Stop it first; prevent to enter infinite loops if there is a 
         // link pointing to unknown nodes.
         // Note that this is still not enough to prevent problems
         this.d3Simulation.stop();
 
-        // Put links below nodes so the node is above
+        // First remove old links
         this.d3Link = this.d3Link.data(linkData, function(d) { 
             return d.source.id + "-" + d.target.id; 
         });
         this.d3Link.exit().remove();
-        this.d3Link = this.d3Link
-            .enter().append("line").merge(this.d3Link)
-            .attr("stroke-width", function(d) { return Math.sqrt(d.meta.value || 1); });
 
+        // Then work with the nodes
         this.d3Node = this.d3Node.data(nodeData, function(d) { return d.id;});
         this.d3Node.exit().remove();
         this.d3Node = this.d3Node
             .enter().append("circle").merge(this.d3Node)
             .attr("r", 5)
-            .attr("fill", function(d) { return colorFunction(d.meta.group || d.id); })
+            .attr("fill", function(d) { return (d.meta.fillColor || _this.defaults.fillColor); })
             .call(d3.drag()
             .on("start", function(d,i) { _this.dragstarted(d,i,this); })
             .on("drag", function(d,i) { _this.dragged(d,i,this); })
             .on("end", function(d,i) { _this.dragended(d,i,this); }));
     
-        //this.d3Node.append("title")
-        //   .text(function(d) { return d.id; });
+        // Finally add new links
+        this.d3Link = this.d3Link
+            .enter().append("line").merge(this.d3Link)
+            .attr("stroke-width", function(d) { return Math.sqrt(d.meta.value || 1); });
+
+
+        this.d3Node.append("title")
+           .text(function(d) { return d.meta.title || ""; });
 
         this.d3Simulation
             .nodes(nodeData);
@@ -128,7 +129,8 @@ var GraphView = widgets.DOMWidgetView.extend({
         this.d3Elem = d3.select(this.el).select('svg');
         
         this.d3Simulation = d3.forceSimulation()
-          .force("link", d3.forceLink().id(function(d) { return d.id; }))
+          .force("link", d3.forceLink()
+          .id(function(d) { return d.id; })) // allows to identify nodes by their 'id' rather than by their index in the list
           .force("charge", d3.forceManyBody())
           .force("center", d3.forceCenter(theWidth / 2, theHeight / 2))
           .alphaTarget(1)
@@ -158,17 +160,10 @@ var GraphView = widgets.DOMWidgetView.extend({
 
 // TODO:
 // - Make sure that when nodes are removed, also the corresponding links are removed
-//   (and they should be removed first!!) Otherwise it crashes in JS (i.e.: validate
-//   the nodes in python, and make a guard in JS to avoid problems)
-// - Povide a Python Object on the other side?
-// - Instead of making a color group, pass a color string from python; expose
-//   colorbrewer2 in python
-// - fix the color function (there is now a 'range(100)')
+//   (and they should be removed first!!) Otherwise it crashes in JS (make a guard in JS to avoid problems)
 // - make the_width, the_height as parameters from python
 // - check parameters (e.g. when there is a node not linked to anything)
 // - check if it is correct that the points seem to move when a new node is added
-// - I think it's not needed that node keys are integers - verify, and remove the +
-//   in JS in front of the value to cast it.
 
 module.exports = {
     GraphModel : GraphModel,
