@@ -81,8 +81,11 @@ var GraphView = widgets.DOMWidgetView.extend({
         this.d3Simulation.stop();
 
         // First remove old links
+        // This pattern should make the id unambiguous (replaces every dash
+        // in the source and target id with a double dash, and uses a unambiguous
+        // separator containing a single dash, guarded by +)
         this.d3Link = this.d3Link.data(linkData, function(d) { 
-            return d.source.id + "-" + d.target.id; 
+            return _.replace(d.source.id, /-/g, '--') + "+-+" + _.replace(d.target.id, /-/g, '--'); 
         });
         this.d3Link.exit().remove();
 
@@ -97,7 +100,7 @@ var GraphView = widgets.DOMWidgetView.extend({
             .on("start", function(d,i) { _this.dragstarted(d,i,this); })
             .on("drag", function(d,i) { _this.dragged(d,i,this); })
             .on("end", function(d,i) { _this.dragended(d,i,this); }));
-    
+
         // Finally add new links
         this.d3Link = this.d3Link
             .enter().append("line").merge(this.d3Link)
@@ -126,6 +129,7 @@ var GraphView = widgets.DOMWidgetView.extend({
         this.el.id = this.elId;
 
         var svgTag = '<svg id width="' + theWidth + '" height="' + theHeight + '"></svg>';
+        
         this.el.innerHTML = svgTag;
         this.d3Elem = d3.select(this.el).select('svg');
         

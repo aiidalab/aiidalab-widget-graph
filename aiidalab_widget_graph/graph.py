@@ -100,13 +100,12 @@ class GraphWidget(widgets.DOMWidget):
         # Remove links
         # Note: for large graphs this might not be very efficient 
         for pair in list(self._links):
-            if link[0] == node_id or link[1] == node_id:
+            if pair[0] == node_id or pair[1] == node_id:
                 del self._links[pair]
 
-        self._links = [
-            link for link in self._links 
-            if link[0] != node_id and link[1] != node_id
-            ]
+        self._links = {k: v for k, v in self._links.items()
+            if v['source'] != node_id and v['dest'] != node_id
+        }
     
     def add_link(self, source_id, dest_id, link_meta=None):
         """
