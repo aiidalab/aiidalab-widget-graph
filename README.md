@@ -3,6 +3,14 @@ aiidalab-widget-graph
 
 A Jupyter widget to visualize interactive graphs
 
+IMPORTANT NOTE
+--------------
+This widget is still in a quite early stage of development.
+If you start using it, expect major back-incompatible changes in the future,
+until we stabilize the API.
+
+Of course, suggestions, issues and Pull Requests are always welcome.
+
 Installation
 ------------
 
