@@ -107,15 +107,18 @@ var GraphView = widgets.DOMWidgetView.extend({
             .attr("stroke-width", function(d) { return Math.sqrt(d.meta.value || 1); });
 
 
-        this.d3Node.append("title")
-           .text(function(d) { return d.meta.title || ""; });
+        this.d3Node.enter().append('svg:g').append("svg:text")
+            .attr('x', 0)
+            .attr('y', 4)
+            .attr('class', 'title')
+            .text(function(d) { return d.meta.title || ""; });
 
         this.d3Simulation
             .nodes(nodeData);
         this.d3Simulation.force("link")
           .links(linkData); 
         this.d3Simulation
-        //.alpha(1)
+        .alpha(1)
         .restart();
     },
 
@@ -170,6 +173,8 @@ var GraphView = widgets.DOMWidgetView.extend({
 // - make the_width, the_height as parameters from python
 // - check parameters (e.g. when there is a node not linked to anything)
 // - check if it is correct that the points seem to move when a new node is added
+// - make the graph directed (as an option?)
+// - allow for multiple links between the same pair of nodes? or not?
 
 module.exports = {
     GraphModel : GraphModel,
